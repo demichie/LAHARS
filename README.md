@@ -1,4 +1,4 @@
-# Welcome to IMEX_SfloW2D-LAHARS
+# IMEX_SfloW2D-LAHARS
 
 IMEX_SfloW2D-LAHARS is a FORTRAN90 code designed to model mudflows (lahars) over digital elevation models (DEMs) of natural terrain, with the total friction slope given by the sum of yield slope, viscous slope and turbulent slope (FLO-2D, O'Brien et al., 1993).
 
