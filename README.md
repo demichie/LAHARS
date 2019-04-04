@@ -1,37 +1,47 @@
-## Welcome to GitHub Pages
+# Welcome to IMEX_SfloW2D-LAHARS
 
-You can use the [editor on GitHub](https://github.com/demichie/LAHARS/edit/gh-pages/README.md) to maintain and preview the content for your website in Markdown files.
+IMEX_SfloW2D-LAHARS is a FORTRAN90 code designed to model mudflows (lahars) over digital elevation models (DEMs) of natural terrain, with the total friction slope given by the sum of yield slope, viscous slope and turbulent slope (FLO-2D, O'Brien et al., 1993).
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+The system is described by an hyperbolic system of partial differential equations with relaxation and source terms. It is possible to select a simpler rheology in order to mimic the system of equations described in Kurganov and Petrova, 2007. IMEX_SfloW2D-LAHARS is written in Fortran90, which has the advantage to have a simple syntax and to be well known into the scientific community.
 
-### Markdown
+The model is discretized in time with an explicit-implicit Runge-Kutta method where the hyperbolic part is solved explicitly and the other terms (friction) are treated implicitly to allow for larger time steps and to enforce the stopping condition. The finite volume solver for the hyperbolic part of the system is based on the Kurganov and Petrova 2007 semi-discrete central scheme and it is not tied on the specific eigen-structure of the model. The implicit part is solved with a Newton-Raphson method where the elements of the Jacobian of the nonlinear system are evaluated numerically with a complex step derivative technique. This automatic procedure allows for easy changes of the friction term.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+The code can deal with different scenarios, but its first aim is to treat lahars over topographies described as digital elevation models (DEMs) in the ESRI ascii format. The output files can be handled very well with gnuplot, in particular with the package it is provided a small script that create a video from the output data saved at different times. Moreover it is possible to save the solution as as ESRI ascii files, suitable for GIS softwares.
 
-```markdown
-Syntax highlighted code block
+### Authors and Contributors
 
-# Header 1
-## Header 2
-### Header 3
+Mattia de' Michieli Vitturi (@demichie)
 
-- Bulleted
-- List
+Giacomo Lari
 
-1. Numbered
-2. List
+### Installation and execution
 
-**Bold** and _Italic_ and `Code` text
+Check first if you have the LAPACK library installed on your system.
 
-[Link](url) and ![Image](src)
-```
+Download the IMEX_SfloW package and create the executable with the following commands from a terminal:
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+>./configure
+>
+>make
+>
+>make install
 
-### Jekyll Themes
+This will create the executable and copy it in the bin folder. You can test the executable copying it in the EXAMPLES folder and running it.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/demichie/LAHARS/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Documentation
 
-### Support or Contact
+A wiki page describing the model is available at:
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+[https://github.com/demichie/LAHARS/wiki](https://github.com/demichie/LAHARS/wiki) 
+
+Doxygen generated documentation of the code can be found at:
+
+[http://demichie.github.io/LAHARS/html/](http://demichie.github.io/LAHARS/html/) 
+
+### Acknowledgments
+
+The development of IMEX-SfloW2D-LAHARS has been partially funded by Istituto Nazionale di Geofisica e Vulcanologia and Italian DPC (INGV - DPC B2).
+
+### References
+
+
