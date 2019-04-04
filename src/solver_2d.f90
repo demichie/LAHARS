@@ -2866,7 +2866,6 @@ CONTAINS
     REAL*8 :: qrecE(n_vars)     !< recons var at the east edge of the cells
     REAL*8 :: qrecS(n_vars)     !< recons var at the south edge of the cells
     REAL*8 :: qrecN(n_vars)     !< recons var at the north edge of the cells
-    REAL*8 :: qrec_bdry(n_vars) !< recons variables outside the domain
 
     REAL*8 :: qrec_stencil(3)   !< recons variables stencil for the limiter
     REAL*8 :: x_stencil(3)    !< grid stencil for the limiter
@@ -3109,49 +3108,67 @@ CONTAINS
 
           ENDDO vars_loop
 
-
           IF ( comp_cells_x .GT. 1 ) THEN
-             
-             IF ( reconstr_variables .EQ. 'phys' ) THEN
-                
-                CALL qp_to_qc( qrecW , B_stag_x(j,k) , q_interfaceR(:,j,k) )
-                CALL qp_to_qc( qrecE , B_stag_x(j+1,k) , q_interfaceL(:,j+1,k) )
-                
-             ELSE IF ( reconstr_variables .EQ. 'cons' ) THEN
-                
-                CALL qc2_to_qc( qrecW , B_stag_x(j,k), q_interfaceR(:,j,k) )
-                CALL qc2_to_qc( qrecE , B_stag_x(j+1,k) , q_interfaceL(:,j+1,k) )
-                
-             END IF
-             
-             IF ( ( j.EQ. -1000 ) .OR. ( j.EQ. -1001 ) )THEN
 
-                WRITE(*,*) 'j',j
-                WRITE(*,*) 'B_stag_x(j,k)', B_stag_x(j,k)
-                WRITE(*,*) 'B_cent(j,k)',B_cent(j,k)
-                WRITE(*,*) 'B_stag_x(j+1,k)', B_stag_x(j+1,k)
-                WRITE(*,*) 
-                WRITE(*,*) 'qrecW', qrecW
-                WRITE(*,*) 'qrec', qrec(:,j,k)
-                WRITE(*,*) 'qrecE', qrecE
-                WRITE(*,*)
-                WRITE(*,*) 'q_interfaceR(:,j,k)', q_interfaceR(:,j,k)
-                WRITE(*,*) 'q(:,j,k)',q(:,j,k)
-                WRITE(*,*) 'q_interfaceL(:,j+1,k)',q_interfaceL(:,j+1,k)
-              
-                READ(*,*)
+             IF ( ( j .GT. 1 ) .AND. ( j .LT. comp_cells_x ) .AND.              &
+                  ( q(1,j,k) .EQ. 0.D0 ) ) THEN
 
-             END IF
-
-             IF ( q(1,j,k) .EQ. 0.D0 ) THEN
+                ! In the internal cell, if thickness h is 0 at the center
+                ! of the cell, then all the variables are 0 at the center
+                ! and at the interfaces (no conversion back is needed from
+                ! reconstructed to conservative)
+                q_interfaceR(:,j,k) = 0.D0
+                q_interfaceL(:,j+1,k) = 0.D0
                 
-                q_interfaceR(1,j,k) = 0.D0
-                q_interfaceL(1,j+1,k) = 0.D0
+             ELSE
                 
-                IF ( solid_transport_flag ) THEN
+                IF ( j.EQ.1 ) THEN
                    
-                   q_interfaceR(4,j,k) = 0.D0
-                   q_interfaceL(4,j+1,k) = 0.D0
+                   ! Dirichelet boundary condition at the west of the domain
+                   DO i=1,n_vars
+                      
+                      IF ( bcW(i)%flag .EQ. 0 ) THEN
+                         
+                         qrecW(i) = bcW(i)%value 
+                         
+                      END IF
+                      
+                   ENDDO
+                   
+                ELSEIF ( j.EQ.comp_cells_x ) THEN
+                   
+                   ! Dirichelet boundary condition at the east of the domain
+                   DO i=1,n_vars
+                      
+                      IF ( bcE(i)%flag .EQ. 0 ) THEN
+                         
+                         qrecE(i) = bcE(i)%value 
+                         
+                      END IF
+                      
+                   ENDDO
+                   
+                END IF
+                
+                IF ( reconstr_variables .EQ. 'phys' ) THEN
+                   
+                   CALL qp_to_qc( qrecW,B_stag_x(j,k),q_interfaceR(:,j,k) )
+                   CALL qp_to_qc( qrecE,B_stag_x(j+1,k),q_interfaceL(:,j+1,k) )
+                   
+                ELSE IF ( reconstr_variables .EQ. 'cons' ) THEN
+                   
+                   CALL qc2_to_qc( qrecW,B_stag_x(j,k),q_interfaceR(:,j,k) )
+                   CALL qc2_to_qc( qrecE,B_stag_x(j+1,k),q_interfaceL(:,j+1,k) )
+                   
+                END IF
+                
+                IF ( j.EQ.1 ) THEN
+                   ! Interface value at the left of first x-interface (external)
+                   q_interfaceL(:,j,k) = q_interfaceR(:,j,k)
+                   
+                ELSEIF ( j.EQ.comp_cells_x ) THEN
+                   ! Interface value at the right of last x-interface (external)
+                   q_interfaceR(:,j+1,k) = q_interfaceL(:,j+1,k)
                    
                 END IF
                 
@@ -3159,38 +3176,77 @@ CONTAINS
              
           ELSE
              
+             ! for case comp_cells_x = 1 
              q_interfaceR(:,j,k) = q(:,j,k)
              q_interfaceL(:,j+1,k) = q(:,j,k)
              
           END IF
           
-          
           IF ( comp_cells_y .GT. 1 ) THEN
              
-             IF ( reconstr_variables .EQ. 'phys' ) THEN
+             IF ( ( k .GT. 1 ) .AND. ( k .LT. comp_cells_y ) .AND.              &
+                  ( q(1,j,k) .EQ. 0.D0 ) ) THEN
                 
-                CALL qp_to_qc( qrecS , B_stag_y(j,k) , q_interfaceT(:,j,k) )
-                CALL qp_to_qc( qrecN , B_stag_y(j,k+1) , q_interfaceB(:,j,k+1) )
+                ! In the internal cell, if thickness h is 0 at the center
+                ! of the cell, then all the variables are 0 at the center
+                ! and at the interfaces (no conversion back is needed from
+                ! reconstructed to conservative)
                 
-             ELSE IF ( reconstr_variables .EQ. 'cons' ) THEN
+                q_interfaceT(:,j,k) = 0.D0
+                q_interfaceB(:,j,k+1) = 0.D0
                 
-                CALL qc2_to_qc( qrecS , B_stag_y(j,k), q_interfaceT(:,j,k) )
-                CALL qc2_to_qc( qrecN , B_stag_y(j,k+1), q_interfaceB(:,j,k+1) )
+             ELSE
                 
-             END IF
-             
-             IF ( q(1,j,k) .EQ. 0.D0 ) THEN
-                
-                q_interfaceT(1,j,k) = 0.D0
-                q_interfaceB(1,j,k+1) = 0.D0
-                
-                IF ( solid_transport_flag) THEN
+                IF ( k .EQ. 1 ) THEN
+
+                   ! Dirichelet boundary condition at the south of the domain
+                   DO i=1,n_vars
+                      
+                      IF ( bcS(i)%flag .EQ. 0 ) THEN
+                         
+                         qrecS(i) = bcS(i)%value 
+                         
+                      END IF
+                      
+                   ENDDO
                    
-                   q_interfaceT(4,j,k) = 0.D0
-                   q_interfaceB(4,j,k+1) = 0.D0
+                ELSEIF ( k .EQ. comp_cells_y ) THEN
                    
+                   ! Dirichelet boundary condition at the north of the domain
+                   DO i=1,n_vars
+                      
+                      IF ( bcN(i)%flag .EQ. 0 ) THEN
+                         
+                         qrecN(i) = bcN(i)%value 
+                         
+                      END IF
+                      
+                   ENDDO
+
                 END IF
                 
+                IF ( reconstr_variables .EQ. 'phys' ) THEN
+                   
+                   CALL qp_to_qc( qrecS , B_stag_y(j,k) , q_interfaceT(:,j,k) )
+                   CALL qp_to_qc( qrecN , B_stag_y(j,k+1) , q_interfaceB(:,j,k+1) )
+                   
+                ELSE IF ( reconstr_variables .EQ. 'cons' ) THEN
+                   
+                   CALL qc2_to_qc( qrecS , B_stag_y(j,k), q_interfaceT(:,j,k) )
+                   CALL qc2_to_qc( qrecN , B_stag_y(j,k+1), q_interfaceB(:,j,k+1) )
+                   
+                END IF
+
+                IF ( k .EQ. 1 ) THEN
+                   ! Interface value at the bottom of first y-interface (external)
+                   q_interfaceB(:,j,k) = q_interfaceT(:,j,k)
+
+                ELSEIF ( k .EQ. comp_cells_y ) THEN
+                   ! Interface value at the top of last y-interface (external)
+                   q_interfaceT(:,j,k+1) = q_interfaceB(:,j,k+1)
+
+                END IF
+
              END IF
              
           ELSE
@@ -3200,171 +3256,6 @@ CONTAINS
              
           END IF
           
-
-          ! Boundary conditions outside the domain (external interfaces)
-          check_if_solve_along_y:IF ( comp_cells_y .GT. 1 ) THEN
-
-             ! South q_interfaceB(:,j,1)
-             south_bc:IF ( k .EQ. 1 ) THEN
-
-                DO i=1,n_vars
-
-                   IF ( bcS(i)%flag .EQ. 0 ) THEN
-
-                      qrec_bdry(i) = bcS(i)%value 
-
-                   ELSE
-
-                      qrec_bdry(i) = qrecS(i)
-
-                   END IF
-
-                ENDDO
-
-                IF ( reconstr_variables .EQ. 'phys' ) THEN
-
-                   CALL qp_to_qc( qrec_bdry, B_stag_y(j,1), q_interfaceB(:,j,1) )
-
-                ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
-
-                   CALL qc2_to_qc(qrec_bdry, B_stag_y(j,1), q_interfaceB(:,j,1) )
-
-                END IF
-
-             ENDIF south_bc
-
-             ! North qT(i,j,comp_interfaces_y)
-             north_bc:IF ( k .EQ. comp_cells_y ) THEN
-
-                DO i=1,n_vars
-
-                   IF ( bcN(i)%flag .EQ. 0 ) THEN
-
-                      qrec_bdry(i) = bcN(i)%value 
-
-                   ELSE
-
-                      qrec_bdry(i) = qrecN(i)
-
-                   END IF
-
-                ENDDO
-
-                IF ( reconstr_variables .EQ. 'phys' ) THEN
-
-                   CALL qp_to_qc( qrec_bdry , B_stag_y(j,comp_interfaces_y) ,   &
-                        q_interfaceT(:,j,comp_interfaces_y) )
-
-                ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
-
-                   CALL qc2_to_qc( qrec_bdry , B_stag_y(j,comp_interfaces_y) ,  &
-                        q_interfaceT(:,j,comp_interfaces_y) )
-
-                END IF
-
-             ENDIF north_bc
-
-          ELSE
-             ! 1D-simulation in the x-direction
-
-             IF ( k .EQ. 1 ) THEN
-             
-                q_interfaceB(:,j,1) = q(:,j,k)
-
-             END IF
-
-             IF ( k .EQ. comp_cells_y ) THEN
-
-                q_interfaceT(:,j,comp_interfaces_y) = q(:,j,k)
-
-             END IF
-             
-          END IF check_if_solve_along_y
-
-          check_if_solve_along_x:IF ( comp_cells_x .GT. 1 ) THEN
-
-             ! West q_interfaceL(:,1,k)
-             west_bc:IF ( j.EQ.1 ) THEN
-
-                DO i=1,n_vars
-
-                   IF ( bcW(i)%flag .EQ. 0 ) THEN
-
-                      qrec_bdry(i) = bcW(i)%value 
-
-                   ELSE
-
-                      qrec_bdry(i) = qrecW(i)
-
-                   END IF
-
-                ENDDO
-
-                IF ( reconstr_variables .EQ. 'phys' ) THEN
-
-                   CALL qp_to_qc( qrec_bdry, B_stag_x(1,k), q_interfaceL(:,1,k) )
-
-                ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
-
-                   CALL qc2_to_qc( qrec_bdry, B_stag_x(1,k), q_interfaceL(:,1,k) )
-
-                END IF
-
-                q_interfaceR(:,1,k) = q_interfaceL(:,1,k)
-
-             ENDIF west_bc
-
-             ! East q_interfaceR(:,comp_interfaces_x,k)
-             east_bc:IF ( j.EQ.comp_cells_x ) THEN
-
-                DO i=1,n_vars
-
-                   IF ( bcE(i)%flag .EQ. 0 ) THEN
-
-                      qrec_bdry(i) = bcE(i)%value 
-
-                   ELSE
-
-                      qrec_bdry(i) = qrecE(i)
-
-                   END IF
-
-                ENDDO
-
-                IF ( reconstr_variables .EQ. 'phys' ) THEN
-
-                   CALL qp_to_qc( qrec_bdry , B_stag_x(comp_interfaces_x,k) ,   &
-                        q_interfaceR(:,comp_interfaces_x,k) )
-
-                ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
-
-                   CALL qc2_to_qc( qrec_bdry ,  B_stag_x(comp_interfaces_x,k) , &
-                        q_interfaceR(:,comp_interfaces_x,k) )
-
-                END IF
-
-                q_interfaceL(:,comp_interfaces_x,k) =                           &
-                     q_interfaceR(:,comp_interfaces_x,k)
-
-             ENDIF east_bc
-
-          ELSE
-
-             ! 1D-simulation in the y-direction
-             IF ( j .EQ. 1 ) THEN
-
-                q_interfaceL(:,1,k) = q(:,j,k)
-               
-             END IF
-
-             IF ( j .EQ. comp_cells_x ) THEN
-
-                q_interfaceR(:,comp_interfaces_x,k) = q(:,j,k)
-
-             END IF
-             
-          END IF check_if_solve_along_x
-
        END DO x_loop
 
     END DO y_loop
