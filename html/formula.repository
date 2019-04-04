@@ -1,0 +1,18 @@
+\form#0:$h+B, u, v, xs , T $
+\form#1:$ h+B $
+\form#2:$ u $
+\form#3:$ v $
+\form#4:$ xs $
+\form#5:$ T $
+\form#6:$ h + B $
+\form#7:$ rho_m*u $
+\form#8:$ rho_m*v $
+\form#9:$ alphas $
+\form#10:$ rho_m hu $
+\form#11:$ rho_m hv $
+\form#12:$ h alpha_s $
+\form#13:$ hT $
+\form#14:$ h \cdot alpha_s $
+\form#15:$ h \cdot T $
+\form#16:$\alpha_1, p_1, p_2, \rho u, w, T$
+\form#17:$ Q^{(i)} = Q^n - dt \sum_{j=1}^{i-1}\tilde{a}_{j}\partial_x F(Q^{(j)}) + dt \sum_{j=1}^{i-1} a_j NH(Q^{(j)}) + dt a_{diag} NH(Q^{(i)}) $
