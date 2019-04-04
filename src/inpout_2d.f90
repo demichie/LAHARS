@@ -677,8 +677,10 @@ CONTAINS
           STOP
           
        ELSE
-   
-          IF ( solid_transport_flag ) THEN
+  
+          check_file = restart_file(dot_idx+1:dot_idx+3)
+
+          IF ( ( solid_transport_flag ) .AND.  ( check_file .EQ. 'asc' ) ) THEN
 
              IF ( ( sed_vol_perc .LT. 0.D0 ) .OR. ( sed_vol_perc .GT. 100.D0 ) )   &
                   THEN
@@ -1947,24 +1949,6 @@ CONTAINS
              
           END IF
 
-          IF ( rho_w .EQ. -1.D0 ) THEN
-             
-             WRITE(*,*) 'ERROR: problem with namelist RHEOLOGY_PARAMETERS'
-             WRITE(*,*) 'RHO_W =' , rho_w 
-             WRITE(*,*) 'Please check the input file'
-             STOP
-             
-          END IF
-
-          IF ( rho_s .EQ. -1.D0 ) THEN
-             
-             WRITE(*,*) 'ERROR: problem with namelist RHEOLOGY_PARAMETERS'
-             WRITE(*,*) 'RHO_S =' , rho_s 
-             WRITE(*,*) 'Please check the input file'
-             STOP
-             
-          END IF
-
        ELSEIF ( rheology_model .EQ. 5 ) THEN
 
              WRITE(*,*) 'RHEOLOGY_MODEL =' , rheology_model
@@ -2138,10 +2122,9 @@ CONTAINS
 
        ENDDO
 
-       topography_profile = MAX(0.D0,topography_profile)
+       topography_profile(3,:,:) = MAX(0.D0,topography_profile(3,:,:))
 
        WRITE(*,*) ''
-
 
        CLOSE(2001)
 
