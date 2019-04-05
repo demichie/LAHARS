@@ -2886,6 +2886,21 @@ CONTAINS
           IF ( reconstr_variables .EQ. 'phys' ) THEN
              
              CALL qc_to_qp( qc , B_cent(j,k) , qrec(1:n_vars,j,k) )
+
+             IF ( solid_transport_flag ) THEN   
+                
+                IF ( qrec(4,j,k) .GT. 1.D0 ) THEN
+                   
+                   WRITE(*,*) 'reconstruction: j,k',j,k
+                   WRITE(*,*) 'qrec(4,j,k)',qrec(4,j,k)
+                   WRITE(*,*) 'q(1:n_vars,j,k)',q(1:n_vars,j,k)
+                   WRITE(*,*) 'B_cent(j,k)', B_cent(j,k)
+                   WRITE(*,*) 'h',q(1,j,k)-B_cent(j,k)
+                   READ(*,*)
+                   
+                END IF
+                
+             END IF
              
           ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
              
@@ -2893,20 +2908,7 @@ CONTAINS
              
           END IF
           
-          IF ( solid_transport_flag ) THEN   
-             
-             IF ( qrec(4,j,k) .GT. 1.D0 ) THEN
-                
-                WRITE(*,*) 'reconstruction: j,k',j,k
-                WRITE(*,*) 'qrec(4,j,k)',qrec(4,j,k)
-                WRITE(*,*) 'q(1:n_vars,j,k)',q(1:n_vars,j,k)
-                WRITE(*,*) 'B_cent(j,k)', B_cent(j,k)
-                WRITE(*,*) 'h',q(1,j,k)-B_cent(j,k)
-                READ(*,*)
-                
-             END IF
-             
-          END IF
+
           
        END DO
        
