@@ -19,7 +19,7 @@ Please provide six arguments:
 
 Usage example of the script:
 
->> ./create_example5.py 400 phys 2 0.5 1 1
+>> ./create_exampleErosionDeposition.py 400 phys 2 0.5 1 1
 
 Once the input file (IMEX_SfloW2D.inp) is created create a simbolic link of the executable 
 in this folder:
