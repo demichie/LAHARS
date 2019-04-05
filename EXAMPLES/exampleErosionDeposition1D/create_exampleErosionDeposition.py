@@ -35,7 +35,7 @@ if len(sys.argv)==7:
     except ValueError:
         print("You must enter a float for erosion coefficient: "+a)
 
-    a = sys.argv[4]
+    a = sys.argv[6]
     try:
         settling_vel = float(a)
     except ValueError:
