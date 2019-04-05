@@ -14,7 +14,7 @@ Please provide three arguments:
 
 Usage example of the script:
 
->> ./create_example5.py 400 phys 2 0.5
+>> ./create_exampleLahar.py 400 phys 2 0.5
 
 Once the input file (IMEX_SfloW2D.inp) is created create a simbolic link of the executable 
 in this folder:
