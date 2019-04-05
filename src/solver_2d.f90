@@ -145,6 +145,14 @@ MODULE solver_2d
   !> Sum of all the terms of the equations except the transient term
   REAL*8, ALLOCATABLE :: residual_term(:,:,:)
 
+  INTEGER, ALLOCATABLE :: j_cent(:)
+  INTEGER, ALLOCATABLE :: k_cent(:)
+
+  INTEGER, ALLOCATABLE :: j_stag_x(:)
+  INTEGER, ALLOCATABLE :: k_stag_x(:)
+
+  INTEGER, ALLOCATABLE :: j_stag_y(:)
+  INTEGER, ALLOCATABLE :: k_stag_y(:)
 
   REAL*8 :: t_imex1,t_imex2
 
@@ -168,7 +176,7 @@ CONTAINS
 
     REAL*8 :: gamma , delta
 
-    INTEGER :: i,j
+    INTEGER :: i,j,k
 
     ALLOCATE( q( n_vars , comp_cells_x , comp_cells_y ) , q0( n_vars ,          &
          comp_cells_x , comp_cells_y ) )
@@ -352,6 +360,49 @@ CONTAINS
 
     ALLOCATE( residual_term( n_vars , comp_cells_x , comp_cells_y ) )
 
+    ALLOCATE( j_cent( comp_cells_x * comp_cells_y ) )
+    ALLOCATE( k_cent( comp_cells_x * comp_cells_y ) )
+
+    DO j = 1,comp_cells_x
+
+       DO k = 1,comp_cells_y
+
+          j_cent( comp_cells_y*(j-1)+k ) = j
+          k_cent( comp_cells_y*(j-1)+k ) = k
+
+       END DO
+
+    END DO
+
+    ALLOCATE( j_stag_x( comp_interfaces_x * comp_cells_y ) )
+    ALLOCATE( k_stag_x( comp_interfaces_x * comp_cells_y ) )
+
+    DO j = 1,comp_interfaces_x
+
+       DO k = 1,comp_cells_y
+
+          j_stag_x( comp_cells_y*(j-1)+k ) = j
+          k_stag_x( comp_cells_y*(j-1)+k ) = k
+
+       END DO
+
+    END DO
+
+
+    ALLOCATE( j_stag_x( comp_cells_x * comp_interfaces_y ) )
+    ALLOCATE( k_stag_x( comp_cells_x * comp_interfaces_y ) )
+
+    DO j = 1,comp_cells_x
+
+       DO k = 1,comp_interfaces_y
+
+          j_stag_x( comp_interfaces_y*(j-1)+k ) = j
+          k_stag_x( comp_interfaces_y*(j-1)+k ) = k
+
+       END DO
+
+    END DO
+
   END SUBROUTINE allocate_solver_variables
 
   !******************************************************************************
@@ -422,6 +473,10 @@ CONTAINS
     DEALLOCATE( mask22 , mask21 , mask11 , mask12 )
 
     DEALLOCATE( residual_term )
+
+    DEALLOCATE ( j_cent , k_cent )
+    DEALLOCATE ( j_stag_x , k_stag_x )
+    DEALLOCATE ( j_stag_y , k_stag_y )
 
   END SUBROUTINE deallocate_solver_variables
 
@@ -2873,46 +2928,44 @@ CONTAINS
     REAL*8 :: qrec_prime_x      !< recons variables slope
     REAL*8 :: qrec_prime_y      !< recons variables slope
 
-    INTEGER :: j,k            !< loop counter (cells)
+    INTEGER :: j,k            !< loop counters (cells)
     INTEGER :: i              !< loop counter (variables)
+    INTEGER :: l              !< loop counter (cells)
 
     ! Compute the variable to reconstruct (phys or cons)
-    DO k = 1,comp_cells_y
-    
-       DO j = 1,comp_cells_x
-
-          qc = q(1:n_vars,j,k)
+    DO l = 1,comp_cells_x*comp_cells_y
+       
+       j = j_cent(l)
+       k = k_cent(l)
+       
+       qc = q(1:n_vars,j,k)
+       
+       IF ( reconstr_variables .EQ. 'phys' ) THEN
           
-          IF ( reconstr_variables .EQ. 'phys' ) THEN
+          CALL qc_to_qp( qc , B_cent(j,k) , qrec(1:n_vars,j,k) )
+          
+          IF ( solid_transport_flag ) THEN   
              
-             CALL qc_to_qp( qc , B_cent(j,k) , qrec(1:n_vars,j,k) )
-
-             IF ( solid_transport_flag ) THEN   
+             IF ( qrec(4,j,k) .GT. 1.D0 ) THEN
                 
-                IF ( qrec(4,j,k) .GT. 1.D0 ) THEN
-                   
-                   WRITE(*,*) 'reconstruction: j,k',j,k
-                   WRITE(*,*) 'qrec(4,j,k)',qrec(4,j,k)
-                   WRITE(*,*) 'q(1:n_vars,j,k)',q(1:n_vars,j,k)
-                   WRITE(*,*) 'B_cent(j,k)', B_cent(j,k)
-                   WRITE(*,*) 'h',q(1,j,k)-B_cent(j,k)
-                   READ(*,*)
-                   
-                END IF
+                WRITE(*,*) 'reconstruction: j,k',j,k
+                WRITE(*,*) 'qrec(4,j,k)',qrec(4,j,k)
+                WRITE(*,*) 'q(1:n_vars,j,k)',q(1:n_vars,j,k)
+                WRITE(*,*) 'B_cent(j,k)', B_cent(j,k)
+                WRITE(*,*) 'h',q(1,j,k)-B_cent(j,k)
+                READ(*,*)
                 
              END IF
              
-          ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
-             
-             CALL qc_to_qc2( qc , B_cent(j,k) , qrec(1:n_vars,j,k) )
-             
           END IF
           
-
+       ELSEIF ( reconstr_variables .EQ. 'cons' ) THEN
           
-       END DO
+          CALL qc_to_qc2( qc , B_cent(j,k) , qrec(1:n_vars,j,k) )
+          
+       END IF
        
-    ENDDO
+    END DO
     
     ! Linear reconstruction
 
