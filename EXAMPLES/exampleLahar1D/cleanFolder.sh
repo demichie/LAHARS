@@ -2,7 +2,12 @@
 clear
 echo "Cleaning folder form output of previous runs of IMEX-SfloW2d"
 
-file="exampleLahar*"
+for file in exampleLahar*
+do
+    if [ -f $file ] ; then
+        rm $file
+    fi
+done
 
 if [ -f $file ] ; then
     rm $file
