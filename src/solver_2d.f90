@@ -389,8 +389,8 @@ CONTAINS
     END DO
 
 
-    ALLOCATE( j_stag_x( comp_cells_x * comp_interfaces_y ) )
-    ALLOCATE( k_stag_x( comp_cells_x * comp_interfaces_y ) )
+    ALLOCATE( j_stag_y( comp_cells_x * comp_interfaces_y ) )
+    ALLOCATE( k_stag_y( comp_cells_x * comp_interfaces_y ) )
 
     DO j = 1,comp_cells_x
 
