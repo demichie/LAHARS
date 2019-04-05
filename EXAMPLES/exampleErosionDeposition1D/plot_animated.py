@@ -52,6 +52,7 @@ n_unique = len(x_unique)
 fig, ax = plt.subplots()
 
 plt.xlim([np.amin(x_unique),np.amax(x_unique)])
+plt.ylim([-0.1,2.1])
 
 line1, = ax.plot(x_unique,B_cent)
 line2, = ax.plot(x_unique,hB)  
@@ -70,11 +71,12 @@ def animate(i):
     data = np.loadtxt(filename,skiprows=0)
 
     x_cent = data[:,0]
+    B_cent = data[:,5]
     hB = data[:,6]
 
     x_unique = np.unique(x_cent)
 
-
+    line1.set_data(x_unique,B_cent)  
     line2.set_data(x_unique,hB)  
     time_text.set_text(time_template % (i*dt))
     
