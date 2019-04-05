@@ -2,11 +2,13 @@
 clear
 echo "Cleaning folder form output of previous runs of IMEX-SfloW2d"
 
-file="exampleErosionDeposition*"
+for file in exampleErosionDeposition*
+do
+    if [ -f $file ] ; then
+        rm $file
+    fi
+done
 
-if [ -f $file ] ; then
-    rm $file
-fi
 
 file="IMEX_SfloW2D.inp"
 
@@ -19,5 +21,3 @@ file="topography_dem.asc"
 if [ -f $file ] ; then
     rm $file
 fi
-
-
