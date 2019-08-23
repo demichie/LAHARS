@@ -78,6 +78,7 @@ MODULE geometry_2d
   INTEGER :: comp_cells_y      !< Number of control volumes y in the comp. domain
   INTEGER :: comp_interfaces_y !< Number of interfaces (comp_cells_y+1)
   REAL*8 :: cell_size
+  INTEGER :: comp_cells_xy
 
 CONTAINS
 

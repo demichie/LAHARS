@@ -15,7 +15,7 @@ MODULE solver_2d
 
   USE constitutive_2d, ONLY : implicit_flag
 
-  USE geometry_2d, ONLY : comp_cells_x,comp_cells_y
+  USE geometry_2d, ONLY : comp_cells_x,comp_cells_y,comp_cells_xy
   USE geometry_2d, ONLY : comp_interfaces_x,comp_interfaces_y
 
   USE geometry_2d, ONLY : B_cent , B_prime_x , B_prime_y , B_stag_x , B_stag_y
@@ -360,8 +360,10 @@ CONTAINS
 
     ALLOCATE( residual_term( n_vars , comp_cells_x , comp_cells_y ) )
 
-    ALLOCATE( j_cent( comp_cells_x * comp_cells_y ) )
-    ALLOCATE( k_cent( comp_cells_x * comp_cells_y ) )
+    comp_cells_xy = comp_cells_x * comp_cells_y
+
+    ALLOCATE( j_cent( comp_cells_xy ) )
+    ALLOCATE( k_cent( comp_cells_xy ) )
 
     DO j = 1,comp_cells_x
 
@@ -474,9 +476,11 @@ CONTAINS
 
     DEALLOCATE( residual_term )
 
-    DEALLOCATE ( j_cent , k_cent )
-    DEALLOCATE ( j_stag_x , k_stag_x )
-    DEALLOCATE ( j_stag_y , k_stag_y )
+    DEALLOCATE( j_cent )
+    ! DEALLOCATE( k_cent )
+    ! DEALLOCATE( j_cent , k_cent )
+    ! DEALLOCATE ( j_stag_x , k_stag_x )
+    ! DEALLOCATE ( j_stag_y , k_stag_y )
 
   END SUBROUTINE deallocate_solver_variables
 
